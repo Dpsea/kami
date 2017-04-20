@@ -25,7 +25,11 @@ def fileinput(_in: str='', selection=''):
 
 def main(*, _in, selection):
     question = fileinput(_in, selection)
-    blocks = question
+    blocks: List[List[Block]] = [[None] * 29 for _ in range(10)]
+    for i in range(10):
+        for j in range(29):
+            blocks[i][j] = question[i][j].copy
+            
     flag = True
     while flag:
         flag = False
