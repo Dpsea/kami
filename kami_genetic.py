@@ -2,6 +2,7 @@
 # __author__ = 'L'
 
 from kami_class import Block
+from kami_function import map_
 from typing import List
 import codecs
 
@@ -14,7 +15,7 @@ def fileinput(_in: str='', selection=''):
         for i in range(10):
             color = selection.index(_str[j][i])
             if color is not 0:
-                _blocks[i][j] = Block(color)
+                _blocks[i][j] = Block(color, (i, j), selection=selection)
                 if j is not 0:
                     _blocks[i][j].link(_blocks[i][j - 1])
                 if i is not 0 and (j - i) % 2 is 0:
@@ -33,6 +34,10 @@ def main(*, _in, selection):
                 if blocks[i][j] is not None:
                     _merge = blocks[i][j].merge()
                     if len(_merge) > 0:
+                        print(blocks[i][j], end='')
+                        for block in _merge:
+                            print(f'{block.addr}', end=' ')
+                        print()
                         flag = True
     for j in range(29):
         for i in range(10):
@@ -43,13 +48,16 @@ def main(*, _in, selection):
                     blocks[i][j] = None
                     print('   ', end=' ')
         print()
+    _blocks = []
     for j in range(29):
         for i in range(10):
             if blocks[i][j] is not None:
                 print(blocks[i][j].link_)
-                
+                _blocks.append(blocks[i][j])
+    print('\n    map >>')
+    print(map_(*_blocks))
 
 if __name__ == '__main__':
-    c = 6
+    c = 0
     selection = '_ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     main(_in=f'kami_in{c}.txt', selection=selection)
