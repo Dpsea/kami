@@ -80,11 +80,18 @@ class KamiTest(unittest.TestCase):
             
     def test_map(self):
         print(self._str('map'))
-        blocks = [Block(i) for i in range(6)]
-        blocks[0].link(blocks[1], blocks[2], blocks[5])
-        blocks[1].link(blocks[3])
-        blocks[2].link(blocks[5])
-        blocks[3].link(blocks[4], blocks[5])
+        blocks = [Block(2),
+                  Block(0),
+                  Block(1), Block(1),
+                  Block(2), Block(3), Block(2),
+                  Block(1), Block(1),
+                  Block(0),
+                  Block(2)]
+        blocks[5].link(*(blocks[1: 5] + blocks[6: 10]))
+        blocks[0].link(*blocks[1: 4])
+        blocks[10].link(*blocks[7: 10])
+        for block in blocks:
+            print(block.link_)
         print(map_(*blocks))
 
 if __name__ == '__main__':

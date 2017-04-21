@@ -40,7 +40,7 @@ class Block:
     @property
     def copy(self):
         if self.clone is None:
-            self.clone = Block(self.color, self.addr)
+            self.clone = Block(self.color, self.addr, selection=self.selection)
             for block in self.linked:
                 self.clone.link(block.copy)
         return self.clone
@@ -61,7 +61,5 @@ class Block:
 
 
 if __name__ == '__main__':
-    need = False
-    if need:
-        from IPython import embed as e
-        e()
+    from IPython import embed as e
+    e()
