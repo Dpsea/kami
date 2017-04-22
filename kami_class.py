@@ -2,16 +2,16 @@
 # __author__ = 'L'
 
 from io import StringIO
-from typing import Tuple
+from typing import Tuple, Union
 
 Point = Tuple[int, int]
 
 
 class Block:
-    def __init__(self, color: int=0, addr: Point=(-1, -1), *, selection: str='0123456789'):
+    def __init__(self, color: int=0, id: Union[int, Point]=-1, *, selection: str= '0123456789'):
         self.color = color
         self.selection = selection
-        self.addr = addr
+        self.id = id
         self.linked = set()
         self.clone = None
 
@@ -40,7 +40,7 @@ class Block:
     @property
     def copy(self):
         if self.clone is None:
-            self.clone = Block(self.color, self.addr, selection=self.selection)
+            self.clone = Block(self.color, self.id, selection=self.selection)
             for block in self.linked:
                 self.clone.link(block.copy)
         return self.clone
@@ -48,11 +48,13 @@ class Block:
     @property
     def link_(self) -> str:
         _str = StringIO()
+        print(f'({self.id:0>2})', end='', file=_str)
         print(self, end='', file=_str)
         for i in range(len(self.linked)):
-            print('─┐ ', end='', file=_str)
-        print('\n  ', end='', file=_str)
+            print('─────┐ ', end='', file=_str)
+        print('\n      ', end='', file=_str)
         for block in self.linked:
+            print(f'({block.id:0>2})', end='', file=_str)
             print(block, end='  ', file=_str)
         return _str.getvalue()
 

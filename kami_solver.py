@@ -2,7 +2,7 @@
 # __author__ = 'L'
 
 from kami_class import Block
-from kami_function import map_
+from kami_function import oneway
 from typing import List
 import codecs
 
@@ -25,41 +25,44 @@ def fileinput(_in: str='', selection=''):
 
 def main(*, _in, selection):
     question = fileinput(_in, selection)
-    blocks: List[List[Block]] = [[None] * 29 for _ in range(10)]
+    _blocks: List[List[Block]] = [[None] * 29 for _ in range(10)]
     for i in range(10):
         for j in range(29):
-            blocks[i][j] = question[i][j].copy
+            _blocks[i][j] = question[i][j].copy
             
     flag = True
     while flag:
         flag = False
         for i in range(10):
             for j in range(29):
-                if blocks[i][j] is not None:
-                    _merge = blocks[i][j].merge()
+                if _blocks[i][j] is not None:
+                    _merge = _blocks[i][j].merge()
                     if len(_merge) > 0:
-                        print(blocks[i][j], end='')
+                        # print(_blocks[i][j], end=' ')
                         for block in _merge:
-                            print(f'{block.addr}', end=' ')
-                        print()
+                            # print(f'{block.id}', end=' ')
+                            _blocks[block.id[0]][block.id[1]] = None
+                        # print()
                         flag = True
+    blocks = []
     for j in range(29):
         for i in range(10):
-            if blocks[i][j] is not None:
-                if len(blocks[i][j].linked) > 0:
-                    print(blocks[i][j], end=' ')
-                else:
-                    blocks[i][j] = None
-                    print('   ', end=' ')
+            # print(_blocks[i][j], end=' ')
+            if _blocks[i][j] is not None:
+                if len(_blocks[i][j].linked) > 0:
+                    print(_blocks[i][j], end=' ')
+                    blocks.append(_blocks[i][j])
+                    blocks[-1].id = len(blocks) - 1
+            else:
+                print(end='  ')
         print()
-    _blocks = []
-    for j in range(29):
-        for i in range(10):
-            if blocks[i][j] is not None:
-                print(blocks[i][j].link_)
-                _blocks.append(blocks[i][j])
+ 
     print('\n    map >>')
-    print(map_(*_blocks))
+    print(oneway(*blocks))
+    
+    print('\n   link >>')
+    for block in blocks:
+        print(block.link_)
 
 if __name__ == '__main__':
     c = 0
