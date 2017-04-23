@@ -20,7 +20,7 @@ class ProgressBar:
         self._lock = Lock()
         self._kill = False
         self.fps = 10
-    
+
     def __call__(self, current, total=0):
         if total is 0:
             total = self.total
@@ -45,7 +45,7 @@ class ProgressBar:
             return False
         else:
             return True
-    
+
     def _tick(self):
         flag = True
         while flag:
@@ -55,8 +55,7 @@ class ProgressBar:
             finally:
                 self._lock.release()
             time.sleep(1 / self.fps)
-            
-            
+
     def stop(self, show=True):
         self._lock.acquire()
         try:
@@ -71,7 +70,7 @@ class ProgressBar:
             if show:
                 print('Terminated')
                 time.sleep(1)
-    
+
     def tick(self, current=-1):
         if self._thread is None:
             self._thread = Thread(target=self._tick)
@@ -84,12 +83,12 @@ class ProgressBar:
                 self._current = current
         finally:
             self._lock.release()
-                    
+
     def refresh(self):
         self.stop(False)
         self.__init__(size=self.size, graph=self.graph, total=self.total)
 
-        
+
 def _timestr(sec: int):
     if sec > 60:
         return f'{int(sec // 60)}m{int(sec % 60):0>2}s'
