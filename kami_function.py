@@ -5,6 +5,7 @@ from io import StringIO
 from typing import List, Tuple, Set
 from kami_class import Block
 from genetic import evolve, Gene
+import time
 
 
 def oneway(*blocks: Tuple[Block, ...], showid=False, unfold=True, stretch=2, ga=True) -> str:
