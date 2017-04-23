@@ -8,10 +8,10 @@ Point = Tuple[int, int]
 
 
 class Block:
-    def __init__(self, color: int=0, id: Union[int, Point]=-1, *, selection: str= '0123456789'):
+    def __init__(self, color: int=0, id_: Union[int, Point]=-1, *, selection: str= '0123456789'):
         self.color = color
         self.selection = selection
-        self.id = id
+        self.id = id_
         self.linked = set()
         self.clone = None
 
@@ -48,14 +48,19 @@ class Block:
     @property
     def link_(self) -> str:
         _str = StringIO()
-        print(f'({self.id:0>2})', end='', file=_str)
+        _id = f'{self.id:>3}'
+        if self.id is -1:
+            _id = '   '
+        print(_id, end='', file=_str)
         print(self, end='', file=_str)
         for i in range(len(self.linked)):
-            print('─────┐ ', end='', file=_str)
-        print('\n      ', end='', file=_str)
+            print('────┐ ', end='', file=_str)
+        print('\n     ', end='', file=_str)
         for block in self.linked:
-            print(f'({block.id:0>2})', end='', file=_str)
-            print(block, end='  ', file=_str)
+            _id = f'{block.id:>3}'
+            if block.id is -1:
+                _id = '   '
+            print(_id, block, end='  ', sep='',  file=_str)
         return _str.getvalue()
 
     def __str__(self):

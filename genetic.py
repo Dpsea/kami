@@ -69,33 +69,31 @@ def evolve(*ancestors: Tuple[Gene, ...], evaluate, crossover=order_base,
         random.shuffle(gene)
         herd.append(tuple(gene))
 
-    # x, y = 0, 0
-    for _ in range(generation):
+    for _generation in range(generation):
         _evaluate = [evaluate(gene) for gene in herd]
         _zip = sorted(zip(_evaluate, herd), key=lambda x: x[0])
         while _zip[0][0] is -1:
             _zip.pop(0)
         if _zip[0][0] == target:
+            print('terminated')
             return _zip[0][1]
-        print(_zip[0][0], _zip[0][1])
-        herd, parents, weight = set(), [], []
-        for p in _zip:
-            weight.append(1 / p[0])
-            parents.append(p[1])
-        for i in range(_elite):
-            herd.add(parents[i])
-        while len(herd) < population:
-            offsprings = crossover(pick(parents, weight, n=2))
-            herd |= set(offsprings)
-        herd = list(herd)
-        for i in range(len(herd)):
-            if pick([True, False], [mutation, 1 - mutation]):
-                herd[i] = mutate(herd[i])
-        
-    #             x += 1
-    #         else:
-    #             y += 1
-    # print(x, y)
-    # print(herd)
-    print([evaluate(gene) for gene in herd])
+        else:
+            # print(_zip[0][0], _zip[0][1])
+            herd, parents, weight = set(), [], []
+            for p in _zip:
+                weight.append(1 / p[0])
+                parents.append(p[1])
+            for i in range(_elite):
+                herd.add(parents[i])
+            _p = mutation
+            for i in range(_elite, len(parents)):
+                _p += (1 - _p) * i / population
+                if pick([True, False], [_p, 1 - _p]):
+                    parents[i] = mutate(parents[i])
+            while len(herd) < population:
+                offsprings = crossover(pick(parents, weight, n=2))
+                herd |= set(offsprings)
+            herd = list(herd)
+                
+    # print([evaluate(gene) for gene in herd])
     return min(herd, key=evaluate)

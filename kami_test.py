@@ -22,6 +22,7 @@ class KamiTest(unittest.TestCase):
     def test_evolve(self):
         print(self._str('evolve'))
         from genetic import evolve
+        
         def f(nlist):
             s = 0
             for n in nlist:
@@ -120,7 +121,7 @@ class KamiTest(unittest.TestCase):
         blocks[10].link(*blocks[7: 10])
         for block in blocks:
             print(block.link_)
-        print(oneway(*blocks, fold=True))
+        print(oneway(*blocks))
 
 
 if __name__ == '__main__':

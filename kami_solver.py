@@ -60,9 +60,9 @@ def main(*, _in, selection):
     print('\n    map >>')
     print(oneway(*blocks))
     
-    print('\n   link >>')
-    for block in blocks:
-        print(block.link_)
+    # print('\n   link >>')
+    # for block in blocks:
+    #     print(block.link_)
 
 if __name__ == '__main__':
     c = 0
