@@ -7,7 +7,7 @@ import time
 
 
 class ProgressBar:
-    def __init__(self, *, size=50, graph='>-', total=1):
+    def __init__(self, *, size=50, graph='>-', total=1, hide=False):
         self.size = size
         self.graph = graph
         self.time = time.time()
@@ -20,6 +20,7 @@ class ProgressBar:
         self._lock = Lock()
         self._kill = False
         self.fps = 10
+        self.hide = hide
 
     def __call__(self, current, total=0):
         if total is 0:
@@ -37,9 +38,10 @@ class ProgressBar:
             else:
                 self.time_left -= time_past
             self.progress = current
-            sys.stdout.write('\r')
-            sys.stdout.write(f'{bar} {percent:>8} {_timestr(self.time_left):>7}')
-            sys.stdout.flush()
+            if not self.hide:
+                sys.stdout.write('\r')
+                sys.stdout.write(f'{bar} {percent:>8} {_timestr(self.time_left):>7}')
+                sys.stdout.flush()
         if current == total:
             print(f'\n{_timestr(time.time() - self._time)}')
             return False
@@ -67,7 +69,7 @@ class ProgressBar:
                 self._thread.join()
                 self._thread = None
             self._kill = False
-            if show:
+            if show and self._current < self.total:
                 print('Terminated')
                 time.sleep(1)
 
@@ -86,7 +88,8 @@ class ProgressBar:
 
     def refresh(self):
         self.stop(False)
-        self.__init__(size=self.size, graph=self.graph, total=self.total)
+        self.__init__(size=self.size, graph=self.graph,
+                      total=self.total, hide=self.hide)
 
 
 def _timestr(sec: int):

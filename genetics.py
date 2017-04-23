@@ -3,8 +3,7 @@
 
 from typing import List, Tuple
 import random
-from progressbar import ProgressBar
-import time
+from prgrbr import ProgressBar
 
 Gene = Tuple[int, ...]
 
@@ -59,10 +58,11 @@ def pick(selection, weight=(), *, n=1):
 
 def evolve(*ancestors: Tuple[Gene, ...], evaluate, crossover=order_base,
            size: int, population: int=100, generation: int=100,
-           mutation: float=0.05, elite: float=0.2, target=0):
+           mutation: float=0.05, elite: float=0.2, target=0,
+           showprogress=False):
     _elite = int(population * elite)
     herd: List[Gene] = []
-    _progress = ProgressBar(size=80, total=population)
+    _progress = ProgressBar(size=80, total=population, hide=not showprogress)
     print('\nInitialize')
     if ancestors is not ():
         for gene in ancestors:
@@ -75,8 +75,8 @@ def evolve(*ancestors: Tuple[Gene, ...], evaluate, crossover=order_base,
         random.shuffle(gene)
         herd.append(tuple(gene))
         
-    _progress.refresh()
-    
+    _progress.stop()
+    _progress = ProgressBar(size=80, total=generation, hide=not showprogress)
     print('\nEvolve')
     for _generation in range(generation):
         _progress.tick()
@@ -104,6 +104,6 @@ def evolve(*ancestors: Tuple[Gene, ...], evaluate, crossover=order_base,
                 offsprings = crossover(pick(parents, weight, n=2))
                 herd |= set(offsprings)
             herd = list(herd)
-    
+    _progress.stop()
     # print([evaluate(gene) for gene in herd])
     return min(herd, key=evaluate)

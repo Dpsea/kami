@@ -2,7 +2,7 @@
 # __author__ = 'L'
 
 from kami_class import Block
-from kami_function import oneway
+from map_oneway import oneway
 from typing import List
 import codecs
 

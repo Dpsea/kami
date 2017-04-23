@@ -3,27 +3,36 @@
 
 import unittest
 from kami_class import Block
-from kami_function import oneway
-from genetic import order_base
+from map_oneway import oneway
 
 
 class KamiTest(unittest.TestCase):
-
     def _str(self, _name):
         return f'{_name:-^20}'
 
     def test_crossover(self):
         print(self._str('crossover'))
-
+        from genetics import order_base
         a = (1, 2, 3, 4, 5, 6, 7)
         b = (2, 3, 5, 6, 7, 1, 4)
         print(a, b, sep='\n')
         c, d = order_base([a, b])
         print(c, d, sep='\n')
 
+    def test_evolve(self):
+        print(self._str('evolve'))
+        from genetics import evolve
+        
+        def f(nlist):
+            s = 0
+            for n in nlist:
+                s = s * 10 + n
+            return s
+        print(evolve(evaluate=f, size=15, generation=20, showprogress=False))
+        
     def test_pick(self):
         print(self._str('pick'))
-        from genetic import pick
+        from genetics import pick
         selection = [[1, 2, 3], [2, 3, 4], [3, 4, 5], [1, 2, 4, 4]]
         weight = [0.6, 0.1, 0.2, 0.1]
         print(pick(selection, weight))
@@ -112,7 +121,7 @@ class KamiTest(unittest.TestCase):
         blocks[10].link(*blocks[7: 10])
         for block in blocks:
             print(block.link_)
-        print(oneway(*blocks, ga=False))
+        print(oneway(*blocks))
 
 
 if __name__ == '__main__':
