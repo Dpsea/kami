@@ -180,7 +180,7 @@ def intersect(sequence: Gene, *, output=False):
         return len(_intersect) + (bonus / len(links)) ** 0.5
 
 
-def oneway(*blocks: Tuple[Block, ...], showid=False, unfold=True, stretch=2, ga=True) -> str:
+def oneway(*blocks, showid=False, unfold=True, stretch=2, ga=True) -> str:
     global _blocks, _stretch, _unfold
     _str = StringIO()
     _stretch, _unfold = stretch, unfold
@@ -192,10 +192,10 @@ def oneway(*blocks: Tuple[Block, ...], showid=False, unfold=True, stretch=2, ga=
             _sequence = evolve(_sequence, evaluate=intersect, size=_len,
                                elite=0.2, population=200, generation=500, showprogress=True)
         
-        _intersect = intersect(_sequence, output=True)
-        print(_intersect[0])
+        _inters = intersect(_sequence, output=True)
+        print(_inters[0])
         _blocks = [_blocks[i] for i in _sequence]
-        _map = draw(*_intersect[1:], showid=showid)
+        _map = draw(*_inters[1:], showid=showid)
         
         for row in _map:
             print(file=_str)
