@@ -64,26 +64,31 @@ def evolve(*ancestors: Gene, evaluate, crossover=None,
         crossover = order_base
     _elite = int(population * elite)
     herd: List[Gene] = []
-    _progress = ProgressBar(size=80, total=generation + 1, hide=not showprogress)
+    current = 0
+    
+    def progressgetter():
+        return current + len(herd) / population
+    
+    _bar = ProgressBar(size=80, total=generation + 1, hide=not showprogress)
+    _bar.start(proggetter=progressgetter)
+    
     if ancestors is not ():
         for gene in ancestors:
-            # _progress.tick(len(herd) / population)
             herd.append(tuple(gene))
     for _ in range(population - len(herd)):
-        # _progress.tick(len(herd) / population)
         gene = [i for i in range(size)]
         random.shuffle(gene)
         herd.append(tuple(gene))
-    _progress.tick()
-    print('\nEvolve')
+
     for _generation in range(generation):
-        _progress.tick()
+        
+        current = _generation + 1
         _evaluate = [evaluate(gene) for gene in herd]
         _zip = sorted(zip(_evaluate, herd), key=lambda x: x[0])
         while _zip[0][0] is -1:
             _zip.pop(0)
         if _zip[0][0] == target:
-            _progress.stop()
+            _bar.stop()
             return _zip[0][1]
         else:
             # print(_zip[0][0], _zip[0][1])
@@ -99,12 +104,9 @@ def evolve(*ancestors: Gene, evaluate, crossover=None,
                 if pick([True, False], [_p, 1 - _p]):
                     parents[i] = mutate(parents[i])
             
-            _existed = len(herd)
             while len(herd) < population:
-                # _progress.tick(_generation + 1 + (len(herd) - _existed) / (population - _existed))
                 offsprings = crossover(pick(parents, weight, n=2))
                 herd |= set(offsprings)
             herd = list(herd)
-    _progress.stop()
-    # print([evaluate(gene) for gene in herd])
+    _bar.stop()
     return min(herd, key=evaluate)

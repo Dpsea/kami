@@ -65,6 +65,6 @@ def main(*, _in, selection):
     #     print(block.link_)
 
 if __name__ == '__main__':
-    c = 5
+    c = 4
     selection = '_ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     main(_in=f'kami_in{c}.txt', selection=selection)

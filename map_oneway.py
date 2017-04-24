@@ -2,8 +2,7 @@
 # __author__ = 'L'
 
 from io import StringIO
-from typing import List, Tuple, Set
-from kami_class import Block
+from typing import List, Set
 from genetics import evolve, Gene
 
 
@@ -190,7 +189,7 @@ def oneway(*blocks, showid=False, unfold=True, stretch=2, ga=True) -> str:
         _sequence = tuple([i for i in range(_len)])
         if ga:
             _sequence = evolve(_sequence, evaluate=intersect, size=_len,
-                               elite=0.2, population=200, generation=500, showprogress=True)
+                               elite=0.2, population=100, generation=300, showprogress=True)
         
         _inters = intersect(_sequence, output=True)
         print(_inters[0])
@@ -198,7 +197,7 @@ def oneway(*blocks, showid=False, unfold=True, stretch=2, ga=True) -> str:
         _map = draw(*_inters[1:], showid=showid)
         
         for row in _map:
-            print(file=_str)
+            print('\n', end='', file=_str)
             for p in row:
                 print(p, end='', file=_str)
     return _str.getvalue()

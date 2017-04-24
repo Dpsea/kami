@@ -2,121 +2,162 @@
 # __author__ = 'L'
 
 from multiprocessing import Queue, Process
+from threading import Thread
 from typing import Union
 from queue import Empty
 import sys
 import time
+import os
 
 
 class ProgressBar:
-    def __init__(self, *, total: int, size: int=50, graph: str='>-', hide: bool=False):
+    def __init__(self, *, total: int, size: int=50, graph: str='>-',
+                 hide: bool=False):
         self.size = size
         self.graph = str(graph)
         self.hide = hide
         self.total = total
-        self.time = time.time()
-        self.time_start = time.time()
-        self.time_update = 0
-        self.time_left = 0
-        self.progress = 0
-        self._current = 0
-        self._str = '...'
-        self._started = False
+        self._time = time.time()
+        self._starttime = time.time()
+        self._updatetime = 0
+        self._lefttime = 0
+        self._progress = 0
+        self._bar = '...'
+        self._percent = ''
+        self._processing = False
         self.fps = 4
         self._update_interval = 0.06
         self.q: Queue = Queue()
         self.p: Process = None
+        self.t: Thread = None
+
+    def _update(self):
+        bar_size = int(self._progress * self.size // self.total)
+        self._time = time.time()
+        try:
+            self._lefttime = (self._time - self._starttime) * (self.total - self._progress) // self._progress
+        except ZeroDivisionError:
+            self._lefttime = 99 * 60
+        self._bar = self.graph[0] * bar_size + self.graph[1] * (self.size - bar_size)
+        self._percent = f'{self._progress / self.total:.2%}'
 
     def __call__(self, current, total=-1):
         if total is not -1:
             self.total = total
-        self._current = current
+        self._progress = current
         self._update()
-        sys.stdout.write('\r')
-        sys.stdout.write(self._str)
-        sys.stdout.flush()
-        if self._current >= self.total:
-            print(f'\n{_timestr(time.time() - self.time_start)}')
+        sys.stderr.write('\r')
+        sys.stderr.write(f'[{self._bar}][{self._percent:^8}][{_timestr(self._lefttime):^7}]')
+        sys.stderr.flush()
+        if self._progress >= self.total:
+            self._processing = False
+            print(f'\n{_timestr(time.time() - self._starttime)}')
 
-    def _update(self):
-        bar_size = int(self._current * self.size // self.total)
-        self.time = time.time()
-        try:
-            self.time_left = (self.time - self.time_start) * (self.total - self._current) // self._current
-        except ZeroDivisionError:
-            self.time_left = 99 * 60
-        self.progress = self._current
-        bar = self.graph[0] * bar_size + self.graph[1] * (self.size - bar_size)
-        percent = f'{self._current / self.total:.2%}'
-        self._str = f'{bar}{percent:>9}'
-
-    def tick(self, current: Union[int, float]=-1, subprogress=False):
-        _str_subbar = ''
-        if current is -1:
-            self._current += 1
-            _subprogress = 0
+    def start(self, *, proggetter=None):
+        self._processing = True
+        if proggetter is None and not self.hide:
+            self.p = Process(target=self._tick, args=(None, True))
+            self.p.start()
         else:
-            self._current = current
-            _subprogress = current - int(current)
-        if not self._started:
-            self._started = True
-            self.time_start = time.time()
-            self.q.put((self._str, self.time_left, _str_subbar))
+            self._starttime = time.time()
+            self.q.put((self._bar, self._percent, self._lefttime))
             if not self.hide:
-                self.p = Process(target=_tick, args=(self.q, self.fps))
+                self.p = Process(target=self._tick, args=(self.q, False))
                 self.p.start()
-        if self._current >= self.total:
+            self.t = Thread(target=self._tack, args=(proggetter,))
+            self.t.start()
+            
+    def tick(self, current: Union[int, float]=-1):
+        if current is -1:
+            self._progress += 1
+        else:
+            self._progress = current
+        if not self._processing:
+            self._processing = True
+            self._starttime = time.time()
+            self.q.put((self._bar, self._percent, self._lefttime))
+            if not self.hide:
+                self.p = Process(target=self._tick, args=(self.q, False))
+                self.p.start()
+        if self._progress >= self.total:
             if not self.hide:
                 self.p.terminate()
                 time.sleep(1 / self.fps)
                 self.__call__(self.total)
-            self._started = False
+            self._processing = False
             time.sleep(0.5)
-        if _subprogress > 0 and subprogress:
-            subbar_size = int(_subprogress * 10)
-            _str_subbar = f'{self.graph[0] * subbar_size + self.graph[1] * (10 - subbar_size)}:>12'
-        if time.time() - self.time_update > self._update_interval:
+        if time.time() - self._updatetime > self._update_interval:
             self._update()
-            self.time_update = time.time()
+            self._updatetime = time.time()
             try:
                 self.q.get(False)
             except Empty:
                 pass
-            self.q.put((self._str, self.time_left, _str_subbar))
+            self.q.put((self._bar, self._percent, self._lefttime))
+            
+    def _tack(self, proggetter):
+        while self._processing:
+            _progress = proggetter()
+            self.tick(_progress)
+            
+    def _tick(self, q: Queue, stopwatch=False):
+        if not stopwatch:
+            print(f'\rPID: {os.getpid()}')
+            _time = time.time()
+            _lefttime = 0
+            _bar = '...'
+            _percent = ''
+            while True:
+                _signal = ' '
+                try:
+                    _bar, _percent, _lefttime = q.get(False)
+                    _time = time.time()
+                    _signal = '.'
+                except Empty:
+                    _lefttime -= time.time() - _time
+                    _time = time.time()
+                sys.stderr.write('\r')
+                sys.stderr.write(f'[{_bar}][{_percent:^8}][{_timestr(_lefttime):^7}]{_signal}')
+                sys.stderr.flush()
+                time.sleep(1 / self.fps)
+        else:
+            _time = time.time()
+            _neon = ['>   ', '>>  ',
+                     ' >> ', '  >>',
+                     '   >', '    ',
+                     '   <', '  <<',
+                     ' << ', '<<  ',
+                     '<   ', '    ']
+            _passedtime = 0
+            while _passedtime < 6000:
+                _passedtime = time.time() - _time
+                _index = int(_passedtime) % len(_neon)
+                sys.stderr.write('\r')
+                sys.stderr.write(f'[{_neon[_index]}][{_timestr(_passedtime):^7}]')
+                sys.stderr.flush()
+                time.sleep(1 / self.fps)
 
     def stop(self):
-        if self._started:
-            try:
-                self.p.terminate()
-            finally:
-                self._started = False
-                print('\nTerminated')
+        try:
+            self.p.terminate()
+            self.p = None
+            time.sleep(0.5)
+        finally:
+            if self._processing:
+                self._processing = False
+                try:
+                    self.t.join()
+                    self.t = None
+                except AttributeError:
+                    pass
+                print(f'\n{_timestr(time.time() - self._starttime)}')
+                print('Terminated')
                 time.sleep(0.5)
 
     def refresh(self):
         self.stop()
         self.__init__(size=self.size, graph=self.graph,
                       total=self.total, hide=self.hide)
-
-
-def _tick(q: Queue, fps):
-    _time = time.time()
-    time_left = 0
-    _str = '...'
-    _str_subbar = ''
-    while True:
-        _signal = ' '
-        try:
-            _str, time_left, _str_subbar = q.get(False)
-            _time = time.time()
-            _signal = '.'
-        except Empty:
-            time_left -= time.time() - _time
-            _time = time.time()
-        sys.stdout.write('\r')
-        sys.stdout.write(f'{_str}{_timestr(time_left):>7}{_signal}{_str_subbar}')
-        sys.stdout.flush()
-        time.sleep(1 / fps)
 
 
 def _timestr(sec: int):
@@ -129,6 +170,13 @@ def _timestr(sec: int):
 if __name__ == '__main__':
     import random
     process = ProgressBar(total=100)
+    s = 0
+    
+    def getter():
+        global s
+        return s
+    process.start(proggetter=getter)
     for i in range(100):
-        process.tick()
-        time.sleep(random.uniform(0.1, 0.5))
+        s = i + 1
+        # process.tick(s)
+        time.sleep(random.uniform(0.01, 0.1))
