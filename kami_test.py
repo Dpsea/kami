@@ -82,16 +82,16 @@ class KamiTest(unittest.TestCase):
         blocks[9].link(blocks[6], blocks[7], blocks[10])
         blocks[10].link(blocks[7], blocks[8], blocks[9])
 
-        # for block in blocks:
-        #     print(block.link_)
+        for block in blocks:
+            print(block.link_)
 
         for block in blocks:
             block.merge()
 
-        # print('    merge >>')
-        # for block in blocks:
-        #     if len(block.linked) > 0:
-        #         print(block.link_)
+        print('    merge >>')
+        for block in blocks:
+            if len(block.linked) > 0:
+                print(block.link_)
 
     def test_copy(self):
         print(self._str('copy'))
@@ -121,7 +121,7 @@ class KamiTest(unittest.TestCase):
         blocks[10].link(*blocks[7: 10])
         for block in blocks:
             print(block.link_)
-        print(oneway(*blocks))
+        print(oneway(*blocks, population=50, generation=20, showprogress=False))
 
 
 if __name__ == '__main__':

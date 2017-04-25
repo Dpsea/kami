@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # __author__ = 'L'
 
-from kami_class import Block
+from kami_class import Block, Field
 from map_oneway import oneway
 from typing import List
 import codecs
@@ -40,8 +40,8 @@ def main(*, _in, selection):
                     if len(_merge) > 0:
                         # print(_blocks[i][j], end=' ')
                         for block in _merge:
-                            # print(f'{block.id}', end=' ')
-                            _blocks[block.id[0]][block.id[1]] = None
+                            # print(f'{block.ident}', end=' ')
+                            _blocks[block.ident[0]][block.ident[1]] = None
                         # print()
                         flag = True
     blocks = []
@@ -52,7 +52,7 @@ def main(*, _in, selection):
                 if len(_blocks[i][j].linked) > 0:
                     print(_blocks[i][j], end=' ')
                     blocks.append(_blocks[i][j])
-                    blocks[-1].id = len(blocks) - 1
+                    blocks[-1]._id = len(blocks) - 1
             else:
                 print(end='  ')
         print()
@@ -65,6 +65,6 @@ def main(*, _in, selection):
     #     print(block.link_)
 
 if __name__ == '__main__':
-    c = 4
+    c = 0
     selection = '_ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     main(_in=f'kami_in{c}.txt', selection=selection)

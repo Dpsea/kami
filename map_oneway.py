@@ -9,10 +9,7 @@ from genetics import evolve, Gene
 _blocks, _stretch, _unfold = (), 2, True
 
 
-def draw(links, link_map, showid=False):
-    global _blocks, _stretch
-    stretch = _stretch
-    blocks = _blocks
+def draw(blocks, links, link_map, *, showid=False, stretch=2):
     _len = len(blocks)
     _map = [[] for _ in range(_len)]
     wide = [max([len(link_map[which][i]) for i in range(_len)]) for which in (0, 1)]
@@ -107,8 +104,7 @@ def intersect(sequence: Gene, *, output=False):
                 bonus += (d - b) ** 2
     
     _intersect = []
-    link_map = [[[] for _ in range(_len + 1)],
-                [[] for _ in range(_len + 1)]]
+    link_map = [[[] for _ in range(_len + 1)] for _ in range(2)]
     needle = [0, 0]
     side = [set(), set()]
     for d in range(_len + 1):
@@ -179,8 +175,8 @@ def intersect(sequence: Gene, *, output=False):
         return len(_intersect) + (bonus / len(links)) ** 0.5
 
 
-def oneway(*blocks, showid=False, unfold=True, stretch=2, ga=True) -> str:
-    global _blocks, _stretch, _unfold
+def oneway(*blocks, showid=False, unfold=True, stretch=2, ga=True, **gakwargs) -> str:
+    global _blocks, _unfold
     _str = StringIO()
     _stretch, _unfold = stretch, unfold
     _blocks = blocks
@@ -188,13 +184,15 @@ def oneway(*blocks, showid=False, unfold=True, stretch=2, ga=True) -> str:
     if _len > 0:
         _sequence = tuple([i for i in range(_len)])
         if ga:
-            _sequence = evolve(_sequence, evaluate=intersect, size=_len,
-                               elite=0.2, population=100, generation=300, showprogress=True)
+            gakw_local = dict(evaluate=intersect, size=_len, elite=0.2,
+                              population=100, generation=300, showprogress=True)
+            gakw_local.update(**gakwargs)
+            _sequence = evolve(_sequence, **gakw_local)
         
         _inters = intersect(_sequence, output=True)
         print(_inters[0])
-        _blocks = [_blocks[i] for i in _sequence]
-        _map = draw(*_inters[1:], showid=showid)
+        _blocks = tuple([_blocks[i] for i in _sequence])
+        _map = draw(_blocks, *_inters[1:], showid=showid, stretch=2)
         
         for row in _map:
             print('\n', end='', file=_str)

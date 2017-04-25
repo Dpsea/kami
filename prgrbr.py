@@ -51,6 +51,7 @@ class ProgressBar:
         sys.stderr.flush()
         if self._progress >= self.total:
             self._processing = False
+            time.sleep(1 / self.fps)
             print(f'\n{_timestr(time.time() - self._starttime)}')
 
     def start(self, *, proggetter=None):
@@ -79,13 +80,6 @@ class ProgressBar:
             if not self.hide:
                 self.p = Process(target=self._tick, args=(self.q, False))
                 self.p.start()
-        if self._progress >= self.total:
-            if not self.hide:
-                self.p.terminate()
-                time.sleep(1 / self.fps)
-                self.__call__(self.total)
-            self._processing = False
-            time.sleep(0.5)
         if time.time() - self._updatetime > self._update_interval:
             self._update()
             self._updatetime = time.time()
@@ -94,6 +88,13 @@ class ProgressBar:
             except Empty:
                 pass
             self.q.put((self._bar, self._percent, self._lefttime))
+        if self._progress >= self.total:
+            if not self.hide:
+                self.p.terminate()
+                time.sleep(1 / self.fps)
+                self.__call__(self.total)
+            self._processing = False
+            time.sleep(0.5)
             
     def _tack(self, proggetter):
         while self._processing:
@@ -103,6 +104,7 @@ class ProgressBar:
     def _tick(self, q: Queue, stopwatch=False):
         if not stopwatch:
             print(f'\rPID: {os.getpid()}')
+            time.sleep(0.1)
             _time = time.time()
             _lefttime = 0
             _bar = '...'
@@ -142,6 +144,8 @@ class ProgressBar:
             self.p.terminate()
             self.p = None
             time.sleep(0.5)
+        except AttributeError:
+            pass
         finally:
             if self._processing:
                 self._processing = False
@@ -180,3 +184,4 @@ if __name__ == '__main__':
         s = i + 1
         # process.tick(s)
         time.sleep(random.uniform(0.01, 0.1))
+    process.stop()
