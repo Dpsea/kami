@@ -59,7 +59,7 @@ def pick(selection, weight=(), *, n=1):
 def evolve(*ancestors: Gene, evaluate, crossover=None,
            size: int, population: int=100, generation: int=100,
            mutation: float=0.05, elite: float=0.2, target=0,
-           showprogress=False):
+           showprogress=False) -> Gene:
     if crossover is None:
         crossover = order_base
     _elite = int(population * elite)

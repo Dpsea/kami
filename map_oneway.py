@@ -2,7 +2,7 @@
 # __author__ = 'L'
 
 from io import StringIO
-from typing import List, Set
+from typing import List, Set, Tuple, Union
 from genetics import evolve, Gene
 
 
@@ -19,7 +19,7 @@ def draw(blocks, links, link_map, *, showid=False, stretch=2):
             _map[i].append(blocks[i].__str__())
     else:
         for i in range(_len):
-            _map[i].append(f'{blocks[i].id:0>3}' + blocks[i].__str__())
+            _map[i].append(f'{blocks[i].ident:0>3}' + blocks[i].__str__())
     
     if stretch < 2:
         empty = ''
@@ -175,14 +175,15 @@ def intersect(sequence: Gene, *, output=False):
         return len(_intersect) + (bonus / len(links)) ** 0.5
 
 
-def oneway(*blocks, showid=False, unfold=True, stretch=2, ga=True, **gakwargs) -> str:
+def oneway(*blocks, showid=False, unfold=True, stretch=2, reorder=False,
+           ga=True, **gakwargs) -> Union[str, Tuple[str, Gene]]:
     global _blocks, _unfold
     _str = StringIO()
     _stretch, _unfold = stretch, unfold
     _blocks = blocks
     _len = len(blocks)
     if _len > 0:
-        _sequence = tuple([i for i in range(_len)])
+        _sequence = tuple(range(_len))
         if ga:
             gakw_local = dict(evaluate=intersect, size=_len, elite=0.2,
                               population=100, generation=300, showprogress=True)
@@ -198,4 +199,7 @@ def oneway(*blocks, showid=False, unfold=True, stretch=2, ga=True, **gakwargs) -
             print('\n', end='', file=_str)
             for p in row:
                 print(p, end='', file=_str)
-    return _str.getvalue()
+        if reorder:
+            return _str.getvalue(), _sequence
+        else:
+            return _str.getvalue()

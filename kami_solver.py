@@ -38,33 +38,30 @@ def main(*, _in, selection):
                 if _blocks[i][j] is not None:
                     _merge = _blocks[i][j].merge()
                     if len(_merge) > 0:
-                        # print(_blocks[i][j], end=' ')
                         for block in _merge:
                             # print(f'{block.ident}', end=' ')
                             _blocks[block.ident[0]][block.ident[1]] = None
                         # print()
                         flag = True
-    blocks = []
+    blocks = Field()
     for j in range(29):
         for i in range(10):
-            # print(_blocks[i][j], end=' ')
             if _blocks[i][j] is not None:
-                if len(_blocks[i][j].linked) > 0:
-                    print(_blocks[i][j], end=' ')
-                    blocks.append(_blocks[i][j])
-                    blocks[-1]._id = len(blocks) - 1
+                print(_blocks[i][j], end=' ')
+                blocks += _blocks[i][j]
             else:
                 print(end='  ')
         print()
- 
-    print('\n    map >>')
-    print(oneway(*blocks))
     
-    # print('\n   link >>')
-    # for block in blocks:
-    #     print(block.link_)
+    print('\n    map >>')
+    gakwargs = dict(elite=0.2, population=100, generation=100, mutation=0.1, showprogress=True)
+    _str, sequence = oneway(*blocks, reorder=True, ga=True, **gakwargs)
+    print(_str)
+    blocks.reorderby(sequence)
+    print(hash(blocks))
+    
 
 if __name__ == '__main__':
-    c = 0
+    c = 4
     selection = '_ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     main(_in=f'kami_in{c}.txt', selection=selection)
