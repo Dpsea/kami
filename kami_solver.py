@@ -57,6 +57,6 @@ def main(*, _in, selection):
     
 
 if __name__ == '__main__':
-    c = 4
+    c = 6
     selection = '_ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     main(_in=f'kami_in{c}.txt', selection=selection)

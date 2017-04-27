@@ -15,6 +15,7 @@ class Block:
         self.ident = ident
         self.addr = addr
         self.linked = set()
+        self.colortable = None
 
     def link(self, *blocks):
         for block in blocks:
@@ -93,13 +94,13 @@ class Field:
     
     @property
     def _gethash(self):
-        colortable = [tuple(sorted([_b.color for _b in b.linked])) for b in self._tuple]
+        self.colortable = [tuple(sorted([_b.color for _b in b.linked])) for b in self._tuple]
         decimal = [b.color for b in self._tuple]
         for i in range(self._len):
-            for color in colortable[i]:
+            for color in self.colortable[i]:
                 decimal[i] = decimal[i] * 10 + color
-        colortable = tuple([y[0] for y in sorted(zip(colortable, decimal), key=lambda x: x[1])])
-        return hash(colortable)
+        self.colortable = tuple([y[0] for y in sorted(zip(self.colortable, decimal), key=lambda x: x[1])])
+        return hash(self.colortable)
 
     def __add__(self, other):
         if isinstance(other, Block):

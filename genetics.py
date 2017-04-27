@@ -87,8 +87,9 @@ def evolve(*ancestors: Gene, evaluate, crossover=None,
         _zip = sorted(zip(_evaluate, herd), key=lambda x: x[0])
         while _zip[0][0] is -1:
             _zip.pop(0)
-        if _zip[0][0] == target:
+        if _zip[0][0] <= target:
             _bar.stop()
+            print(f'{_zip[0][0]} < {target}')
             return _zip[0][1]
         else:
             # print(_zip[0][0], _zip[0][1])

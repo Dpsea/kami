@@ -7,20 +7,21 @@ from genetics import evolve, Gene
 
 
 _blocks, _stretch, _unfold = (), 2, True
+ylog: List = []
 
 
 def draw(blocks, links, link_map, *, showid=False, stretch=2):
     _len = len(blocks)
     _map = [[] for _ in range(_len)]
-    wide = [max([len(link_map[which][i]) for i in range(_len)]) for which in (0, 1)]
-    print(f'< {wide[0]} | {wide[1]} >')
+    wideness = [max([len(link_map[which][i]) for i in range(_len)]) for which in (0, 1)]
+    print(f'< {wideness[0]} | {wideness[1]} >')
     if not showid:
         for i in range(_len):
             _map[i].append(blocks[i].__str__())
     else:
         for i in range(_len):
             _map[i].append(f'{blocks[i].ident:0>3}' + blocks[i].__str__())
-    
+
     if stretch < 2:
         empty = ''
         line = ''
@@ -28,9 +29,9 @@ def draw(blocks, links, link_map, *, showid=False, stretch=2):
         empty = ' ' * (stretch - 1 - (stretch + 1) // 2)
         line = '─' * ((stretch + 1) // 2)
     for i in range(_len):
-        _map[i] = [' '] * wide[0] + _map[i] + [' '] * wide[1]
-        for j in reversed(range(0, wide[0])):
-            _j = wide[0] - j - 1
+        _map[i] = [' '] * wideness[0] + _map[i] + [' '] * wideness[1]
+        for j in reversed(range(0, wideness[0])):
+            _j = wideness[0] - j - 1
             try:
                 c = link_map[0][i][_j]
                 if c is not ' ':
@@ -44,7 +45,7 @@ def draw(blocks, links, link_map, *, showid=False, stretch=2):
             except IndexError:
                 break
         flag, interv = False, ' ' * (stretch - 1)
-        for j in range(0, wide[0] + 1):
+        for j in range(0, wideness[0] + 1):
             if flag and _map[i][j] is ' ':
                 _map[i][j] = '─' * stretch
             elif not flag and (_map[i][j] is '┌' or _map[i][j] is '└'):
@@ -52,9 +53,9 @@ def draw(blocks, links, link_map, *, showid=False, stretch=2):
                 flag, interv = True, line + empty
             else:
                 _map[i][j] = interv + _map[i][j]
-        
-        for j in range(wide[0] + 1, wide[0] + wide[1] + 1):
-            _j = j - wide[0] - 1
+
+        for j in range(wideness[0] + 1, wideness[0] + wideness[1] + 1):
+            _j = j - wideness[0] - 1
             try:
                 c = link_map[1][i][_j]
                 if c is not ' ':
@@ -68,7 +69,7 @@ def draw(blocks, links, link_map, *, showid=False, stretch=2):
             except IndexError:
                 break
         flag, interv = False, ' ' * (stretch - 1)
-        for j in reversed(range(wide[0], wide[0] + wide[1] + 1)):
+        for j in reversed(range(wideness[0], wideness[0] + wideness[1] + 1)):
             if flag and _map[i][j] is ' ':
                 _map[i][j] = '─' * stretch
             elif not flag and (_map[i][j] is '┐' or _map[i][j] is '┘'):
@@ -88,7 +89,7 @@ def intersect(sequence: Gene, *, output=False):
     stack_in: List[Set[int]] = [set() for _ in range(_len + 1)]
     stack_out: List[Set[int]] = [set() for _ in range(_len + 1)]
     c = 0
-    bonus = 0
+    bonus, punish = 0, 0
     for b in range(len(sequence)):
         i = sequence[b]
         for block in blocks[i].linked:
@@ -101,13 +102,13 @@ def intersect(sequence: Gene, *, output=False):
                 stack_in[b].add(c)
                 stack_out[d].add(c)
                 c += 1
-                bonus += (d - b) ** 2
-    
+                punish += (d - b) ** 2
+
     _intersect = []
     link_map = [[[] for _ in range(_len + 1)] for _ in range(2)]
     needle = [0, 0]
     side = [set(), set()]
-    for d in range(_len + 1):
+    for d in range(_len + 1):   # collect intersections
         b = d
         while len(stack_out[d]) > 0:
             b -= 1
@@ -141,8 +142,8 @@ def intersect(sequence: Gene, *, output=False):
                     which = min(choice, key=lambda x: needle[x])
                     for i in range(b, d + 1):
                         link_map[which][i][needle[which]] = c
-            
-            if unfold:
+
+            if unfold:      # try reducing intersections by unfolding
                 for c_in in stack_in[b]:
                     for c_out in stack_out[d]:
                         which_in, which_out = -1, -1
@@ -163,16 +164,19 @@ def intersect(sequence: Gene, *, output=False):
             else:
                 _intersect += [(c_in, c_out) for c_in in stack_in[b] for c_out in stack_out[d]]
                 # print(stack_out[d], stack_in[b])
-    if output:
-        # for which in (0, 1):
-        #     print()
-        #     for row in link_map[which]:
-        #         for p in row:
-        #             print(f'{p:<3}', end='')
-        #         print()
-        return len(_intersect), links, link_map,
+
+    if not output:
+        return len(_intersect) + _parameter(punish, len(links), _len)
     else:
-        return len(_intersect) + (bonus / len(links)) ** 0.5
+        return len(_intersect), links, link_map
+
+
+def _parameter(x, n, k):
+    global ylog
+    y = round((x / n) ** 0.5, 4)
+    y = y * 2 / k
+    ylog.append(y)
+    return round(y, 4)
 
 
 def oneway(*blocks, showid=False, unfold=True, stretch=2, reorder=False,
@@ -189,12 +193,12 @@ def oneway(*blocks, showid=False, unfold=True, stretch=2, reorder=False,
                               population=100, generation=300, showprogress=True)
             gakw_local.update(**gakwargs)
             _sequence = evolve(_sequence, **gakw_local)
-        
+
         _inters = intersect(_sequence, output=True)
         print(f'{_inters[0]} intersection(s)')
         _blocks = tuple([_blocks[i] for i in _sequence])
         _map = draw(_blocks, *_inters[1:], showid=showid, stretch=2)
-        
+
         for row in _map:
             print('\n', end='', file=_str)
             for p in row:

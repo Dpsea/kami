@@ -90,8 +90,11 @@ class ProgressBar:
             self.q.put((self._bar, self._percent, self._lefttime))
         if self._progress >= self.total:
             if not self.hide:
-                self.p.terminate()
-                time.sleep(1 / self.fps)
+                try:
+                    self.p.terminate()
+                    time.sleep(1 / self.fps)
+                except AttributeError:
+                    pass
                 self.__call__(self.total)
             self._processing = False
             time.sleep(0.5)
