@@ -13,7 +13,7 @@ def draw(blocks, links, link_map, *, showid=False, stretch=2):
     _len = len(blocks)
     _map = [[] for _ in range(_len)]
     wide = [max([len(link_map[which][i]) for i in range(_len)]) for which in (0, 1)]
-    print(wide)
+    print(f'< {wide[0]} | {wide[1]} >')
     if not showid:
         for i in range(_len):
             _map[i].append(blocks[i].__str__())
@@ -164,19 +164,19 @@ def intersect(sequence: Gene, *, output=False):
                 _intersect += [(c_in, c_out) for c_in in stack_in[b] for c_out in stack_out[d]]
                 # print(stack_out[d], stack_in[b])
     if output:
-        for which in (0, 1):
-            print()
-            for row in link_map[which]:
-                for p in row:
-                    print(f'{p:<3}', end='')
-                print()
+        # for which in (0, 1):
+        #     print()
+        #     for row in link_map[which]:
+        #         for p in row:
+        #             print(f'{p:<3}', end='')
+        #         print()
         return len(_intersect), links, link_map,
     else:
         return len(_intersect) + (bonus / len(links)) ** 0.5
 
 
 def oneway(*blocks, showid=False, unfold=True, stretch=2, reorder=False,
-           ga=True, **gakwargs) -> Union[str, Tuple[str, Gene]]:
+           ga=False, **gakwargs) -> Union[str, Tuple[str, Gene]]:
     global _blocks, _unfold
     _str = StringIO()
     _stretch, _unfold = stretch, unfold
@@ -191,7 +191,7 @@ def oneway(*blocks, showid=False, unfold=True, stretch=2, reorder=False,
             _sequence = evolve(_sequence, **gakw_local)
         
         _inters = intersect(_sequence, output=True)
-        print(_inters[0])
+        print(f'{_inters[0]} intersection(s)')
         _blocks = tuple([_blocks[i] for i in _sequence])
         _map = draw(_blocks, *_inters[1:], showid=showid, stretch=2)
         
@@ -199,6 +199,7 @@ def oneway(*blocks, showid=False, unfold=True, stretch=2, reorder=False,
             print('\n', end='', file=_str)
             for p in row:
                 print(p, end='', file=_str)
+        print(file=_str)
         if reorder:
             return _str.getvalue(), _sequence
         else:

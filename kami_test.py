@@ -2,7 +2,7 @@
 # __author__ = 'L'
 
 import unittest
-from kami_class import Block
+from kami_class import Block, Field
 from map_oneway import oneway
 
 
@@ -50,20 +50,6 @@ class KamiTest(unittest.TestCase):
         # for block in blocks:
         #     print(block.link_)
 
-    def test_merge_unit(self):
-        print(self._str('merge_unit'))
-        blocks = [Block(0), Block(0), Block(1)]
-        blocks[0].link(blocks[1])
-        # for block in blocks:
-        #     print(block.link_)
-
-        for block in blocks:
-            block.merge()
-
-        # print('    ---->')
-        # for block in blocks:
-        #     print(block.link_)
-
     def test_merge(self):
         print(self._str('merge'))
         blocks = [Block(0), Block(0), Block(0),
@@ -95,17 +81,19 @@ class KamiTest(unittest.TestCase):
 
     def test_copy(self):
         print(self._str('copy'))
-        blocks = [Block(i) for i in range(4)]
+        blocks = [Block(i, selection='ABCD') for i in range(4)]
         blocks[0].link(blocks[1], blocks[2])
         blocks[1].link(blocks[0], blocks[2])
         blocks[2].link(blocks[0], blocks[1], blocks[3])
-        blocks_clone = []
-        for block in blocks:
-            print(block.link_)
-            blocks_clone.append(block.copy)
-        print('    clone >>')
-        for block in blocks_clone:
-            print(block.link_)
+        f = Field(*blocks, updateid=True)
+        fcopy = f.copy
+        for block in f:
+            if len(block.linked) > 0:
+                print(block.link_)
+        print('    copy >>')
+        for block in fcopy:
+            if len(block.linked) > 0:
+                print(block.link_)
 
     def test_map(self):
         print(self._str('map'))
@@ -121,7 +109,14 @@ class KamiTest(unittest.TestCase):
         blocks[10].link(*blocks[7: 10])
         for block in blocks:
             print(block.link_)
-        print(oneway(*blocks, population=50, generation=20, showprogress=False))
+        f0 = Field(*blocks)
+        print(oneway(*f0, ga=True, population=50, generation=20, showprogress=False))
+        f1 = f0.color_(5, 1)
+        print(oneway(*f1))
+        f2 = f1.color_(3, 2)
+        print(oneway(*f2))
+        f3 = f2.color_(1, 0)
+        print(oneway(*f3))
 
 
 if __name__ == '__main__':

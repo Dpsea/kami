@@ -11,8 +11,8 @@ import os
 
 
 class ProgressBar:
-    def __init__(self, *, total: int, size: int=50, graph: str='>-',
-                 hide: bool=False):
+    def __init__(self, *, total: int, size: int=50,
+                 graph: str='>-', hide: bool=False):
         self.size = size
         self.graph = str(graph)
         self.hide = hide
