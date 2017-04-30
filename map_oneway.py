@@ -181,7 +181,7 @@ def _parameter(x, n, k):
     return round(y, 4)
 
 
-def oneway(*blocks, showid=False, unfold=True, stretch=2, reorder=False,
+def oneway(*blocks, showid=False, unfold=True, stretch=2, output=False,
            ga=False, **gakwargs) -> Union[str, Tuple[str, Gene]]:
     global _blocks, _unfold
     _str = StringIO()
@@ -207,7 +207,7 @@ def oneway(*blocks, showid=False, unfold=True, stretch=2, reorder=False,
             for p in row:
                 print(p, end='', file=_str)
         print(file=_str)
-        if reorder:
+        if output:
             return _str.getvalue(), _sequence
         else:
             return _str.getvalue()
