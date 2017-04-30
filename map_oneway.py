@@ -10,11 +10,9 @@ _blocks, _stretch, _unfold = (), 2, True
 ylog: List = []
 
 
-def draw(blocks, links, link_map, *, showid=False, stretch=2):
+def draw(blocks, links, link_map, width, *, showid=False, stretch=2):
     _len = len(blocks)
     _map = [[] for _ in range(_len)]
-    wideness = [max([len(link_map[which][i]) for i in range(_len)]) for which in (0, 1)]
-    print(f'< {wideness[0]} | {wideness[1]} >')
     if not showid:
         for i in range(_len):
             _map[i].append(blocks[i].__str__())
@@ -29,9 +27,9 @@ def draw(blocks, links, link_map, *, showid=False, stretch=2):
         empty = ' ' * (stretch - 1 - (stretch + 1) // 2)
         line = '─' * ((stretch + 1) // 2)
     for i in range(_len):
-        _map[i] = [' '] * wideness[0] + _map[i] + [' '] * wideness[1]
-        for j in reversed(range(0, wideness[0])):
-            _j = wideness[0] - j - 1
+        _map[i] = [' '] * width[0] + _map[i] + [' '] * width[1]
+        for j in reversed(range(0, width[0])):
+            _j = width[0] - j - 1
             try:
                 c = link_map[0][i][_j]
                 if c is not ' ':
@@ -45,7 +43,7 @@ def draw(blocks, links, link_map, *, showid=False, stretch=2):
             except IndexError:
                 break
         flag, interv = False, ' ' * (stretch - 1)
-        for j in range(0, wideness[0] + 1):
+        for j in range(0, width[0] + 1):
             if flag and _map[i][j] is ' ':
                 _map[i][j] = '─' * stretch
             elif not flag and (_map[i][j] is '┌' or _map[i][j] is '└'):
@@ -54,8 +52,8 @@ def draw(blocks, links, link_map, *, showid=False, stretch=2):
             else:
                 _map[i][j] = interv + _map[i][j]
 
-        for j in range(wideness[0] + 1, wideness[0] + wideness[1] + 1):
-            _j = j - wideness[0] - 1
+        for j in range(width[0] + 1, width[0] + width[1] + 1):
+            _j = j - width[0] - 1
             try:
                 c = link_map[1][i][_j]
                 if c is not ' ':
@@ -69,7 +67,7 @@ def draw(blocks, links, link_map, *, showid=False, stretch=2):
             except IndexError:
                 break
         flag, interv = False, ' ' * (stretch - 1)
-        for j in reversed(range(wideness[0], wideness[0] + wideness[1] + 1)):
+        for j in reversed(range(width[0], width[0] + width[1] + 1)):
             if flag and _map[i][j] is ' ':
                 _map[i][j] = '─' * stretch
             elif not flag and (_map[i][j] is '┐' or _map[i][j] is '┘'):
@@ -117,15 +115,15 @@ def intersect(sequence: Gene, *, output=False):
             stack_in[b] -= intersetion
             if output:
                 for c in intersetion:
-                    choice = (0, 1)
+                    choices = (0, 1)
                     if not unfold:
-                        choice = (1,)
+                        choices = (1,)
                     else:
                         for which in (0, 1):
                             if c in side[which]:
-                                choice = (which,)
+                                choices = (which,)
                     needle = [-1, -1]
-                    for which in choice:
+                    for which in choices:
                         i = b - 1
                         while i != d:
                             needle[which] += 1
@@ -136,12 +134,15 @@ def intersect(sequence: Gene, *, output=False):
                                 try:
                                     something = link_map[which][i][needle[which]]
                                 except IndexError:
-                                    distance = needle[which] - len(link_map[which][i])
-                                    link_map[which][i] += [' '] * (distance + 1)
                                     something = ' '
-                    which = min(choice, key=lambda x: needle[x])
+                    which = min(choices, key=lambda x: needle[x])
                     for i in range(b, d + 1):
-                        link_map[which][i][needle[which]] = c
+                        try:
+                            link_map[which][i][needle[which]] = c
+                        except IndexError:
+                            distance = needle[which] - len(link_map[which][i])
+                            link_map[which][i] += [' '] * (distance + 1)
+                            link_map[which][i][needle[which]] = c
 
             if unfold:      # try reducing intersections by unfolding
                 for c_in in stack_in[b]:
@@ -168,7 +169,8 @@ def intersect(sequence: Gene, *, output=False):
     if not output:
         return len(_intersect) + _parameter(punish, len(links), _len)
     else:
-        return len(_intersect), links, link_map
+        width = [max([len(link_map[which][i]) for i in range(_len)]) for which in (0, 1)]
+        return len(_intersect), links, link_map, width
 
 
 def _parameter(x, n, k):
@@ -195,7 +197,8 @@ def oneway(*blocks, showid=False, unfold=True, stretch=2, reorder=False,
             _sequence = evolve(_sequence, **gakw_local)
 
         _inters = intersect(_sequence, output=True)
-        print(f'{_inters[0]} intersection(s)')
+        print(f'{_inters[0]} intersection(s)', file=_str)
+        print(f'< {_inters[-1][0]} | {_inters[-1][1]} >', file=_str)
         _blocks = tuple([_blocks[i] for i in _sequence])
         _map = draw(_blocks, *_inters[1:], showid=showid, stretch=2)
 

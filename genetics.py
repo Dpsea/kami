@@ -109,5 +109,5 @@ def evolve(*ancestors: Gene, evaluate, crossover=None,
                 offsprings = crossover(pick(parents, weight, n=2))
                 herd |= set(offsprings)
             herd = list(herd)
-    _bar.stop()
+    _bar.stop('end of evolution')
     return min(herd, key=evaluate)

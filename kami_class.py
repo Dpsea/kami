@@ -154,10 +154,18 @@ class Field:
         return len(colorset)
     
     def color_(self, i: int, color: int):
-        f = self.copy
-        f[i].color = color
-        f -= f[i].merge()
-        return f
+        flag = False
+        for block in self[i].linked:
+            if block.color == color:
+                flag = True
+                break
+        if flag:
+            f = self.copy
+            f[i].color = color
+            f -= f[i].merge()
+            return f
+        else:
+            return None
 
     def reorderby(self, sequence, *, updateid=False):
         if len(sequence) == self._len:

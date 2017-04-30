@@ -25,8 +25,9 @@ class ProgressBar:
         self._bar = '...'
         self._percent = ''
         self._processing = False
+        self._kill = False
         self.fps = 4
-        self._update_interval = 0.06
+        self._update_interval = 0.1
         self.q: Queue = Queue()
         self.p: Process = None
         self.t: Thread = None
@@ -52,7 +53,38 @@ class ProgressBar:
         if self._progress >= self.total:
             self._processing = False
             time.sleep(1 / self.fps)
-            print(f'\n{_timestr(time.time() - self._starttime)}')
+            print(f'\n{_timestr(time.time() - self._starttime)}\n')
+
+    def tick(self, current: Union[int, float] = -1):
+        if not self._kill:
+            if current is -1:
+                self._progress += 1
+            else:
+                self._progress = current
+            if not self._processing:
+                self._processing = True
+                self._starttime = time.time()
+                self.q.put((self._bar, self._percent, self._lefttime))
+                if not self.hide:
+                    self.p = Process(target=self._tick, args=(self.q, False))
+                    self.p.start()
+            if time.time() - self._updatetime > self._update_interval:
+                self._update()
+                self._updatetime = time.time()
+                try:
+                    self.q.get(False)
+                except Empty:
+                    pass
+                self.q.put((self._bar, self._percent, self._lefttime))
+            if self._progress >= self.total:
+                self._processing = False
+                if not self.hide:
+                    try:
+                        self.p.terminate()
+                    except AttributeError:
+                        pass
+                    time.sleep(1 / self.fps)
+                    self.__call__(self.total)
 
     def start(self, *, proggetter=None):
         self._processing = True
@@ -67,47 +99,16 @@ class ProgressBar:
                 self.p.start()
             self.t = Thread(target=self._tack, args=(proggetter,))
             self.t.start()
-            
-    def tick(self, current: Union[int, float]=-1):
-        if current is -1:
-            self._progress += 1
-        else:
-            self._progress = current
-        if not self._processing:
-            self._processing = True
-            self._starttime = time.time()
-            self.q.put((self._bar, self._percent, self._lefttime))
-            if not self.hide:
-                self.p = Process(target=self._tick, args=(self.q, False))
-                self.p.start()
-        if time.time() - self._updatetime > self._update_interval:
-            self._update()
-            self._updatetime = time.time()
-            try:
-                self.q.get(False)
-            except Empty:
-                pass
-            self.q.put((self._bar, self._percent, self._lefttime))
-        if self._progress >= self.total:
-            if not self.hide:
-                try:
-                    self.p.terminate()
-                    time.sleep(1 / self.fps)
-                except AttributeError:
-                    pass
-                self.__call__(self.total)
-            self._processing = False
-            time.sleep(0.5)
-            
+
     def _tack(self, proggetter):
-        while self._processing:
+        while not self._kill and self._processing:
             _progress = proggetter()
             self.tick(_progress)
-            
+
     def _tick(self, q: Queue, stopwatch=False):
         if not stopwatch:
             print(f'\rPID: {os.getpid()}')
-            time.sleep(0.1)
+            time.sleep(1 / self.fps)
             _time = time.time()
             _lefttime = 0
             _bar = '...'
@@ -142,24 +143,28 @@ class ProgressBar:
                 sys.stderr.flush()
                 time.sleep(1 / self.fps)
 
-    def stop(self):
+    def stop(self, msg: str=''):
+        if msg is not '':
+            msg = ': ' + msg
+        time.sleep(1 / self.fps)
+        self._kill = True
+        try:
+            self.t.join()
+            self.t = None
+        except AttributeError:
+            pass
         try:
             self.p.terminate()
             self.p = None
-            time.sleep(0.5)
+            if self._processing:
+                self._processing = False
+                print(f'\n{_timestr(time.time() - self._starttime)}')
+                print(f'Terminated{msg}\n')
         except AttributeError:
             pass
         finally:
-            if self._processing:
-                self._processing = False
-                try:
-                    self.t.join()
-                    self.t = None
-                except AttributeError:
-                    pass
-                print(f'\n{_timestr(time.time() - self._starttime)}')
-                print('Terminated')
-                time.sleep(0.5)
+            self._kill = False
+            time.sleep(1 / self.fps)
 
     def refresh(self):
         self.stop()
@@ -176,15 +181,18 @@ def _timestr(sec: int):
 
 if __name__ == '__main__':
     import random
-    process = ProgressBar(total=100)
+    progressbar = ProgressBar(total=100)
     s = 0
-    
+
     def getter():
         global s
         return s
-    process.start(proggetter=getter)
+    progressbar.start(proggetter=getter)
     for i in range(100):
         s = i + 1
-        # process.tick(s)
+        # progressbar.tick()
         time.sleep(random.uniform(0.01, 0.1))
-    process.stop()
+        # if i is 50:
+        #     progressbar.stop()
+        #     break
+    progressbar.stop()

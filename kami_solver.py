@@ -50,13 +50,13 @@ def main(*, _in, selection):
     
     print('\n    map >>')
     gakwargs = dict(elite=0.2, population=100, generation=200, mutation=0.1, showprogress=True)
-    _str, sequence = oneway(*blocks, reorder=True, ga=True, **gakwargs)
+    _str, sequence = oneway(*blocks, unfold=True, reorder=True, ga=True, **gakwargs)
     print(_str)
     blocks.reorderby(sequence, updateid=True)
     print(hash(blocks))
     
 
 if __name__ == '__main__':
-    c = 6
+    c = 5
     selection = '_ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     main(_in=f'kami_in{c}.txt', selection=selection)
