@@ -65,13 +65,13 @@ def evolve(*ancestors: Gene, evaluate, crossover=None,
     _elite = int(population * elite)
     herd: List[Gene] = []
     current = 0
-    
+
     def progressgetter():
         return current + len(herd) / population
-    
+
     _bar = ProgressBar(size=80, total=generation + 1, hide=not showprogress)
     _bar.start(proggetter=progressgetter)
-    
+
     if ancestors is not ():
         for gene in ancestors:
             herd.append(tuple(gene))
@@ -81,7 +81,7 @@ def evolve(*ancestors: Gene, evaluate, crossover=None,
         herd.append(tuple(gene))
 
     for _generation in range(generation):
-        
+
         current = _generation + 1
         _evaluate = [evaluate(gene) for gene in herd]
         _zip = sorted(zip(_evaluate, herd), key=lambda x: x[0])
@@ -104,7 +104,7 @@ def evolve(*ancestors: Gene, evaluate, crossover=None,
                 _p += (1 - _p) * i / population
                 if pick([True, False], [_p, 1 - _p]):
                     parents[i] = mutate(parents[i])
-            
+
             while len(herd) < population:
                 offsprings = crossover(pick(parents, weight, n=2))
                 herd |= set(offsprings)

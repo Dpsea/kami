@@ -1,2 +1,4 @@
 __img__/
 bulitin_hash.py
+*.pyc
+.history/

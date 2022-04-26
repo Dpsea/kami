@@ -12,7 +12,7 @@ import os
 
 class ProgressBar:
     def __init__(self, *, total: int, size: int=50,
-                 graph: str='>-', hide: bool=False):
+                 graph: str='=-', hide: bool=False):
         self.size = size
         self.graph = str(graph)
         self.hide = hide
@@ -128,12 +128,18 @@ class ProgressBar:
                 time.sleep(1 / self.fps)
         else:
             _time = time.time()
-            _neon = ['>   ', '>>  ',
-                     ' >> ', '  >>',
-                     '   >', '    ',
-                     '   <', '  <<',
-                     ' << ', '<<  ',
-                     '<   ', '    ']
+            _neon = ['>   ',
+                     '>>  ',
+                     ' >> ',
+                     '  >>',
+                     '   >',
+                     '    ',
+                     '   <',
+                     '  <<',
+                     ' << ',
+                     '<<  ',
+                     '<   ',
+                     '    ']
             _passedtime = 0
             while _passedtime < 6000:
                 _passedtime = time.time() - _time
